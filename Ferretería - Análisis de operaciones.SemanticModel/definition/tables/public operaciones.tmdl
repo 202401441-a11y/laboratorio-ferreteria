@@ -1,0 +1,155 @@
+table 'public operaciones'
+	lineageTag: 1087cabd-5ae5-400b-972f-c420870356b1
+
+	column operacion_id
+		dataType: int64
+		formatString: 0
+		lineageTag: a799742f-784d-4a56-96b8-8e3e135dcd5f
+		summarizeBy: none
+		sourceColumn: operacion_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column cliente_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 82e1e643-e7dc-46df-9386-5cdcb090b313
+		summarizeBy: none
+		sourceColumn: cliente_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column sede_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 59899231-018f-4fd7-933c-acc4a7e3bc44
+		summarizeBy: none
+		sourceColumn: sede_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 653730a4-4c77-4ce7-96d7-523933a4ece3
+		summarizeBy: none
+		sourceColumn: fecha
+
+		variation Variation
+			isDefault
+			relationship: 2437fce5-9b51-4ff1-94b8-3166d1b605f4
+			defaultHierarchy: LocalDateTable_68cff9b5-aa38-4f0f-a670-e97c81b75f1c.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column estado
+		dataType: string
+		lineageTag: d287ed5a-d621-4f63-8ebb-b73b189bad03
+		summarizeBy: none
+		sourceColumn: estado
+
+		annotation SummarizationSetBy = Automatic
+
+	column canal
+		dataType: string
+		lineageTag: 4873fd21-979b-424f-9705-32a5885a7dcf
+		summarizeBy: none
+		sourceColumn: canal
+
+		annotation SummarizationSetBy = Automatic
+
+	column actualizado_en
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 993c9917-80b6-4325-b4ff-6d198e430094
+		summarizeBy: none
+		sourceColumn: actualizado_en
+
+		variation Variation
+			isDefault
+			relationship: 6b7a4afb-0b6d-443a-9da3-de87ca4a9c6c
+			defaultHierarchy: LocalDateTable_1c7b640f-ff2d-4c1d-82d2-0c60e56e3f76.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column mes
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: a7395b39-30fd-4ba8-9c0c-adc14e2c1f82
+		summarizeBy: none
+		sourceColumn: mes
+
+		variation Variation
+			isDefault
+			relationship: eb453a52-d54d-4d8e-8ff7-9782d2a9fbcc
+			defaultHierarchy: LocalDateTable_a1dee722-a81b-4959-8270-5e548039a06b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Canal Limpio' =
+			
+			VAR C =
+			    UPPER(
+			        TRIM(
+			            SUBSTITUTE(
+			                SUBSTITUTE(
+			                    'public operaciones'[canal],
+			                    UNICHAR(160), " "
+			                ),
+			                UNICHAR(8203), ""
+			            )
+			        )
+			    )
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        C IN {"", "??", "N/A", "SIN CANAL"}, "Sin canal",
+			        C IN {"DIGITAL", "DIGTAL", "DÍGITAL"}, "Digital",
+			        C = "PRESENCIAL", "Presencial",
+			        C IN {"TELEFONO", "TELÉFONO"}, "Teléfono",
+			        C = "APP", "App",
+			        "Canal por revisar"
+			    )
+		lineageTag: 72da92b7-3eed-422d-9579-8c00926b501a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public operaciones' = m
+		mode: import
+		source =
+				let
+				  Origen = PostgreSQL.Database("ep-sweet-resonance-bdm3rdcz-pooler.c-8.us-east-2.aws.neon.tech", "ferreteria"),
+				  #"Navegación 1" = Origen{[Schema = "public", Item = "operaciones"]}[Data],
+				  Personalizado = Table.TransformColumns(
+				    Origen{[Schema = "public", Item = "operaciones"]}[Data],
+				    {
+				        {"estado", each
+				            if _ = null then "desconocido"
+				            else if Text.Trim(Text.Clean(_)) = "" then "desconocido"
+				            else Text.Lower(Text.Trim(Text.Clean(_))), type text},
+				
+				        {"canal", each
+				            if _ = null then "Sin canal"
+				            else if Text.Trim(Text.Clean(_)) = "" then "Sin canal"
+				            else Text.Proper(Text.Trim(Text.Clean(_))), type text},
+				
+				        {"fecha", each Date.From(_), type nullable date}
+				    }
+				),
+				  #"Personalizado 1" = Table.AddColumn(
+				    Personalizado,
+				    "mes",
+				    each if [fecha] = null then null
+				    else Date.StartOfMonth([fecha]),
+				    type nullable date
+				)
+				in
+				  #"Personalizado 1"
+
+	annotation PBI_ResultType = Table
+

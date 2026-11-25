@@ -1,0 +1,154 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "b1b5bc8aca3c9efe6fed",
+  "position": {
+    "x": 10.542210020590254,
+    "y": 295.18188057652708,
+    "z": 3,
+    "height": 463.85724090597114,
+    "width": 873.68565545641718,
+    "tabOrder": 3
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "public catalogo"
+                    }
+                  },
+                  "Property": "categoria"
+                }
+              },
+              "queryRef": "public catalogo.categoria",
+              "nativeQueryRef": "categoria",
+              "active": true
+            }
+          ]
+        },
+        "Series": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "public sedes"
+                    }
+                  },
+                  "Property": "nombre"
+                }
+              },
+              "queryRef": "public sedes.nombre",
+              "nativeQueryRef": "nombre"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "public detalle_operacion"
+                    }
+                  },
+                  "Property": "Importe Completado"
+                }
+              },
+              "queryRef": "public detalle_operacion.Importe Completado",
+              "nativeQueryRef": "Importe Completado"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "public detalle_operacion"
+                  }
+                },
+                "Property": "Importe Completado"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Importe completado por categoría y sede'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "71d8cbfbbecfbf5abb10",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "public catalogo"
+              }
+            },
+            "Property": "categoria"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "2cfac33e1959963edf12",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "public detalle_operacion"
+              }
+            },
+            "Property": "Importe Completado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "79e1b26e9eb246537414",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "public sedes"
+              }
+            },
+            "Property": "nombre"
+          }
+        },
+        "type": "Categorical"
+      }
+    ]
+  }
+}

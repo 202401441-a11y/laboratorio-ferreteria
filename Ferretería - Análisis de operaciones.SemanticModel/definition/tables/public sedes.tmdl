@@ -1,0 +1,39 @@
+table 'public sedes'
+	lineageTag: 3eaf17d2-c530-45b4-a4dc-67da36268ee7
+
+	column sede_id
+		dataType: int64
+		formatString: 0
+		lineageTag: d677c917-b49c-41e2-a974-b8bd8eb7b26e
+		summarizeBy: none
+		sourceColumn: sede_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre
+		dataType: string
+		lineageTag: 1b0fed4f-8ec9-4d9b-ba24-8b7326d5fa1d
+		summarizeBy: none
+		sourceColumn: nombre
+
+		annotation SummarizationSetBy = Automatic
+
+	column ciudad
+		dataType: string
+		lineageTag: 254020c9-d8b3-40f3-9959-8eab9cbe0bc5
+		summarizeBy: none
+		sourceColumn: ciudad
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public sedes' = m
+		mode: import
+		source =
+				let
+				  Origen = PostgreSQL.Database("ep-sweet-resonance-bdm3rdcz-pooler.c-8.us-east-2.aws.neon.tech", "ferreteria"),
+				  #"Navegación 1" = Origen{[Schema = "public", Item = "sedes"]}[Data]
+				in
+				  #"Navegación 1"
+
+	annotation PBI_ResultType = Table
+

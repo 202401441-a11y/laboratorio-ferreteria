@@ -1,0 +1,98 @@
+table 'public clientes'
+	lineageTag: bd23a60c-1ee1-4085-8c4c-886d08c04ae5
+
+	column cliente_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 0b26f3f1-bc2d-4608-a6af-f50b7916aeb3
+		summarizeBy: none
+		sourceColumn: cliente_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre
+		dataType: string
+		lineageTag: bef21c42-b5f4-426a-9df8-db983dc49a23
+		summarizeBy: none
+		sourceColumn: nombre
+
+		annotation SummarizationSetBy = Automatic
+
+	column segmento
+		dataType: string
+		lineageTag: be3dda89-40bd-474f-9198-c6e20fbf4432
+		summarizeBy: none
+		sourceColumn: segmento
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha_registro
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 904462f9-50c2-4c33-8731-dce86574bb40
+		summarizeBy: none
+		sourceColumn: fecha_registro
+
+		variation Variation
+			isDefault
+			relationship: 27421bb1-a853-4078-9d67-391dc3d02f77
+			defaultHierarchy: LocalDateTable_e37cea53-75d4-4dfc-823a-f6c9be51cb6b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Segmento Limpio' =
+			
+			VAR S =
+			    UPPER(
+			        TRIM(
+			            SUBSTITUTE(
+			                SUBSTITUTE(
+			                    'public clientes'[segmento],
+			                    UNICHAR(160), " "
+			                ),
+			                UNICHAR(8203), ""
+			            )
+			        )
+			    )
+			RETURN
+			    SWITCH(
+			        TRUE(),
+			        S IN {"FRECUENTE", "FREQUENTE"}, "Frecuente",
+			        S = "NUEVO", "Nuevo",
+			        S = "OCASIONAL", "Ocasional",
+			        S IN {"", "N/A", "SIN SEGMENTO"}, "Sin segmento",
+			        "Segmento por revisar"
+			    )
+		lineageTag: 58b391a8-876e-4eaf-928f-9073bb1d03d1
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public clientes' = m
+		mode: import
+		source =
+				let
+				  Origen = PostgreSQL.Database("ep-sweet-resonance-bdm3rdcz-pooler.c-8.us-east-2.aws.neon.tech", "ferreteria"),
+				  #"Navegación 1" = Origen{[Schema = "public", Item = "clientes"]}[Data],
+				  Personalizado = Table.TransformColumns(
+				    Origen{[Schema = "public", Item = "clientes"]}[Data],
+				    {
+				        {"nombre", each
+				            if _ = null then "Cliente desconocido"
+				            else if Text.Trim(Text.Clean(_)) = "" then "Cliente desconocido"
+				            else Text.Trim(Text.Clean(_)), type text},
+				
+				        {"segmento", each
+				            if _ = null then "Sin segmento"
+				            else if Text.Trim(Text.Clean(_)) = "" then "Sin segmento"
+				            else Text.Proper(Text.Trim(Text.Clean(_))), type text}
+				    }
+				),
+				  #"Valor reemplazado" = Table.ReplaceValue(Personalizado, "N/A", "Cliente desconocido", Replacer.ReplaceText, {"nombre"})
+				in
+				  #"Valor reemplazado"
+
+	annotation PBI_ResultType = Table
+

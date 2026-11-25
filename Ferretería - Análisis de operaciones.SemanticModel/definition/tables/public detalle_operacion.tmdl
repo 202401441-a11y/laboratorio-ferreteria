@@ -1,0 +1,158 @@
+table 'public detalle_operacion'
+	lineageTag: 80028ca9-d854-4385-9c97-1b9b2dcac2db
+
+	measure 'Importe Completado' =
+			
+			CALCULATE(
+			    SUM('public detalle_operacion'[importe_neto]),
+			    'public operaciones'[estado] = "completada"
+			)
+		lineageTag: 5fe6e36d-0e51-4a08-8f2c-cce25f200aa9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Unidades Vendidas' =
+			
+			CALCULATE(
+			    SUM('public detalle_operacion'[cantidad]),
+			    'public operaciones'[estado] = "completada",
+			    'public detalle_operacion'[cantidad] > 0,
+			    'public detalle_operacion'[cantidad] < 99999
+			)
+		formatString: 0
+		lineageTag: 08738d4b-424c-4d8c-8650-b26347b1fa21
+
+	measure 'Operaciones Completadas' =
+			
+			CALCULATE(
+			    DISTINCTCOUNT('public detalle_operacion'[operacion_id]),
+			    'public operaciones'[estado] = "completada"
+			)
+		formatString: 0
+		lineageTag: a91bb53e-cb2a-40f7-9cd3-5515c209cd28
+
+	measure 'Participacion Segmento' =
+			
+			DIVIDE(
+			    [Importe Completado],
+			    CALCULATE(
+			        [Importe Completado],
+			        REMOVEFILTERS('public clientes'[Segmento Limpio])
+			    ),
+			    0
+			)
+		formatString: 0.0%
+		lineageTag: 9971f357-6bb1-46de-9be0-f999f7432404
+
+		annotation PBI_FormatHint = {"isCustom":true}
+
+	column detalle_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 108aaeaa-3b37-4012-bd0e-3f1e811640e3
+		summarizeBy: sum
+		sourceColumn: detalle_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column operacion_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 68a9c8bc-4eed-4116-ab18-ddb0b78ce934
+		summarizeBy: none
+		sourceColumn: operacion_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column producto_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 36d84785-f3da-419b-b4a4-dbc101be9f1e
+		summarizeBy: none
+		sourceColumn: producto_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column cantidad
+		dataType: int64
+		formatString: 0
+		lineageTag: 17de102c-ca7d-4e91-afa3-df6997854368
+		summarizeBy: sum
+		sourceColumn: cantidad
+
+		annotation SummarizationSetBy = Automatic
+
+	column precio_unitario
+		dataType: double
+		lineageTag: e5ae57eb-da83-4f73-9cb2-1344472896f6
+		summarizeBy: sum
+		sourceColumn: precio_unitario
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column descuento
+		dataType: double
+		lineageTag: 2a4f14c2-bd18-4a3a-83ec-e4588d4b644b
+		summarizeBy: sum
+		sourceColumn: descuento
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column calidad_dato
+		dataType: string
+		lineageTag: e4a88b32-47ac-46b5-a0c8-46882e1b8c4d
+		summarizeBy: none
+		sourceColumn: calidad_dato
+
+		annotation SummarizationSetBy = Automatic
+
+	column importe_neto
+		dataType: double
+		lineageTag: 9e5150f5-f0d0-4a32-b89e-f538c3dd5152
+		summarizeBy: sum
+		sourceColumn: importe_neto
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'public detalle_operacion' = m
+		mode: import
+		source =
+				let
+				  Origen = PostgreSQL.Database("ep-sweet-resonance-bdm3rdcz-pooler.c-8.us-east-2.aws.neon.tech", "ferreteria"),
+				  #"Navegación 1" = Origen{[Schema = "public", Item = "detalle_operacion"]}[Data],
+				  Personalizado = Table.AddColumn(
+				    Origen{[Schema = "public", Item = "detalle_operacion"]}[Data],
+				    "calidad_dato",
+				    each
+				        if [detalle_id] = null then "ID faltante"
+				        else if [operacion_id] = null then "Operación faltante"
+				        else if [producto_id] = null then "Producto faltante"
+				        else if [cantidad] = null or [cantidad] <= 0 then "Cantidad inválida"
+				        else if [precio_unitario] = null or [precio_unitario] <= 0 then "Precio inválido"
+				        else if [descuento] = null or [descuento] < 0 then "Descuento inválido"
+				        else if [cantidad] >= 99999 then "Cantidad atípica"
+				        else if [precio_unitario] >= 999999 then "Precio atípico"
+				        else if [descuento] >= 9999 then "Descuento atípico"
+				        else "Válido",
+				    type text
+				),
+				  #"Personalizado 1" = Table.AddColumn(
+				    Personalizado,
+				    "importe_neto",
+				    each
+				        if [calidad_dato] <> "Válido" then null
+				        else if [descuento] > [precio_unitario] then null
+				        else [cantidad] * ([precio_unitario] - [descuento]),
+				    type nullable number
+				)
+				in
+				  #"Personalizado 1"
+
+	annotation PBI_ResultType = Table
+

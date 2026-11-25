@@ -1,0 +1,154 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.15.0/schema.json",
+  "name": "65ef52f1d1b3272c3d6d",
+  "position": {
+    "x": 10.542210020590254,
+    "y": 761.67467398764575,
+    "z": 5,
+    "height": 318.90185312285519,
+    "width": 1891.0089224433766,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "hundredPercentStackedColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "public operaciones"
+                    }
+                  },
+                  "Property": "mes"
+                }
+              },
+              "queryRef": "public operaciones.mes",
+              "nativeQueryRef": "mes",
+              "active": true
+            }
+          ]
+        },
+        "Series": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "public clientes"
+                    }
+                  },
+                  "Property": "segmento"
+                }
+              },
+              "queryRef": "public clientes.segmento",
+              "nativeQueryRef": "segmento"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "public detalle_operacion"
+                    }
+                  },
+                  "Property": "Importe Completado"
+                }
+              },
+              "queryRef": "public detalle_operacion.Importe Completado",
+              "nativeQueryRef": "Importe Completado"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "public operaciones"
+                  }
+                },
+                "Property": "mes"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Participación mensual por segmento'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "1788bd7b4f883c81bd6e",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "public detalle_operacion"
+              }
+            },
+            "Property": "Importe Completado"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "5aa47a103a66e5a911c5",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "public clientes"
+              }
+            },
+            "Property": "segmento"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "427002cae27f7b991356",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "public operaciones"
+              }
+            },
+            "Property": "mes"
+          }
+        },
+        "type": "Categorical"
+      }
+    ]
+  }
+}

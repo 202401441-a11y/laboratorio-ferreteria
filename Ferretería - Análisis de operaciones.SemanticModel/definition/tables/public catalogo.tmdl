@@ -1,0 +1,58 @@
+table 'public catalogo'
+	lineageTag: 35102600-1ca5-4a94-8878-34c12b09ee93
+
+	column producto_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 2e95a55b-a776-48f3-be1b-14f40615ec3b
+		summarizeBy: none
+		sourceColumn: producto_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre
+		dataType: string
+		lineageTag: 4491c718-4cc4-48dc-a298-35ebef21a49e
+		summarizeBy: none
+		sourceColumn: nombre
+
+		annotation SummarizationSetBy = Automatic
+
+	column categoria
+		dataType: string
+		lineageTag: 49434c80-788b-4b2e-9558-383ae6cbfa58
+		summarizeBy: none
+		sourceColumn: categoria
+
+		annotation SummarizationSetBy = Automatic
+
+	column precio_lista
+		dataType: double
+		lineageTag: b269987f-ff4d-460c-9a34-f9fc077e0732
+		summarizeBy: none
+		sourceColumn: precio_lista
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'public catalogo' = m
+		mode: import
+		source =
+				let
+				  Origen = PostgreSQL.Database("ep-sweet-resonance-bdm3rdcz-pooler.c-8.us-east-2.aws.neon.tech", "ferreteria"),
+				  #"Navegación 1" = Origen{[Schema = "public", Item = "catalogo"]}[Data],
+				  #"Texto recortado" = Table.TransformColumns(#"Navegación 1", {{"nombre", each Text.Trim(_), type nullable text}}),
+				  #"Texto limpio" = Table.TransformColumns(#"Texto recortado", {{"nombre", each Text.Clean(_), type nullable text}}),
+				  #"Texto recortado 1" = Table.TransformColumns(#"Texto limpio", {{"categoria", each Text.Trim(_), type nullable text}}),
+				  #"Texto limpio 1" = Table.TransformColumns(#"Texto recortado 1", {{"categoria", each Text.Clean(_), type nullable text}}),
+				  #"Valor reemplazado" = Table.TransformColumns(#"Texto limpio 1", {{"categoria", each if _ = null or _ = "" then "Sin categoría" else _, type text}}),
+				  Personalizado = Table.TransformColumns(#"Valor reemplazado", {
+				    {"nombre", each if _ = null or _ = "" or _ = "N/A" or _ = "Prodcto mal escrto" then "Producto desconocido" else _, type text},
+				    {"precio_lista", each if _ = null or _ <= 0 then null else _, type nullable number}
+				})
+				in
+				  Personalizado
+
+	annotation PBI_ResultType = Table
+
